@@ -1,7 +1,7 @@
 import pandas as pd;
 import numpy as np;
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.metrics import accuracy_score,average_precision_score
+from sklearn.metrics import accuracy_score,average_precision_score,precision_score,recall_score
 
 from sklearn.preprocessing import label_binarize
 from sklearn.model_selection import StratifiedShuffleSplit
@@ -53,7 +53,7 @@ def trans_to_num(data = load_file(),dic = dict(),att_to_be_deleted = ['encounter
     data.reset_index(inplace=True);
     return data,dic;
 
-def generate_train_test_set(data = np.zeros((1,1)),train_ratio=0.7):
+def generate_train_test_set(data = np.zeros((1,1)),train_ratio=0.6):
     data_size = len(data);
     train_size = int(data_size*train_ratio);
     return data[:train_size],data[train_size:];
@@ -66,10 +66,10 @@ def error(pre = [],real = []):
             count+=1;
     return count/size;
 
-def get_correlation(data = load_file(),att = 'readmitted'):
-    print(data.keys())
+def get_correlation(data = load_file(),att = "readmitted"):
+#    print(data.keys())
     corr_matrix = data.corr();
-    res = corr_matrix[att].sort_values(ascending=True);
+    res = corr_matrix[att];
     return res
 
 def avg_precision(y_test,y_pre):
@@ -82,10 +82,11 @@ def avg_precision(y_test,y_pre):
 
 def main():
 #    print(data['readmitted'])
+
     data,dic = trans_to_num()
 #    print(data.info())
-    re_cor = get_correlation(data,att='readmitted')
-    print(re_cor)
+#     re_cor = get_correlation(data,att='readmitted')
+#     print(re_cor)
 #     for key in data.keys():
 #         if len(data[key].unique()) == 1:
 #             print(key)
@@ -97,26 +98,28 @@ def main():
 
     X = features;
     Y = labels;
-    sss = StratifiedShuffleSplit(n_splits=1,test_size=0.5);
+    sss = StratifiedShuffleSplit(n_splits=10,test_size=0.5);
     for train_index,test_index in sss.split(data,data['readmitted']):
         train_set = data.loc[train_index]
         test_set = data.loc[test_index]
 
-    train_l = train_set['readmitted'];
-    test_l = test_set['readmitted'];
-    train_f = train_set.drop(labels = ['readmitted'],axis=1);
-    test_f = test_set.drop(labels = ['readmitted'],axis=1);
+        train_l = train_set['readmitted'];
+        test_l = test_set['readmitted'];
+        train_f = train_set.drop(labels = ['readmitted'],axis=1);
+        test_f = test_set.drop(labels = ['readmitted'],axis=1);
 
-    dt = DecisionTreeClassifier(max_features=20);
-    dt = dt.fit(train_f,train_l);
+        dt = DecisionTreeClassifier(max_features=20);
+        dt = dt.fit(train_f,train_l);
 
-    pre_l = dt.predict(test_f);
+        pre_l = dt.predict(test_f);
 
-    test_l_binarized = label_binarize(test_l,classes=[0,1,2]);
-    pre_l_binarized = label_binarize(pre_l,classes=[0,1,2])
+        test_l_binarized = label_binarize(test_l,classes=[0,1,2]);
+        pre_l_binarized = label_binarize(pre_l,classes=[0,1,2])
 
-    print(accuracy_score(test_l_binarized,pre_l_binarized))
-    print(avg_precision(test_l_binarized,pre_l_binarized))
+        # print(accuracy_score(test_l_binarized,pre_l_binarized))
+        # print(avg_precision(test_l_binarized,pre_l_binarized))
+        print(precision_score(test_l,pre_l,average='micro'))
+        print(precision_score(test_l,pre_l,average='micro'))
 
 if __name__ == "__main__":
     main()

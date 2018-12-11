@@ -32,7 +32,7 @@ print(data.info())
 Y = label_binarize(y,classes=[0,1,2]);
 n_classes = Y.shape[1];
 
-sss = StratifiedShuffleSplit(n_splits=5, test_size=0.4);
+sss = StratifiedShuffleSplit(n_splits=10, test_size=0.4);
 classifier = nn.MLPClassifier(hidden_layer_sizes=200)
 #classifier = OneVsOneClassifier(svm.LinearSVC(penalty='l1',dual=False));
 for train_index, test_index in sss.split(data, data['readmitted'],):
